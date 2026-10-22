@@ -1,0 +1,513 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Klima">
+<meta name="theme-color" content="#E6EAED" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#10161C" media="(prefers-color-scheme: dark)">
+<title>Klima postupy</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" type="image/png" href="icon-180.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&display=swap">
+<style>
+:root{
+  --bg:#E6EAED; --surface:#F6F8F9; --ink:#16202A; --muted:#5A6671; --line:#C8D0D6;
+  --blue:#1D5AA6; --blue-soft:#DCE7F4; --red:#BF2F29; --red-soft:#F6E0DE; --ok:#2C7A4C;
+  --cond:'Barlow Condensed','Arial Narrow',Arial,sans-serif;
+  --body:'Barlow',-apple-system,'Segoe UI',Roboto,Arial,sans-serif;
+  box-sizing:border-box;
+  }
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#10161C; --surface:#18212A; --ink:#E5EAEE; --muted:#93A0AB; --line:#2B3743;
+    --blue:#6EA2E4; --blue-soft:#1C2C40; --red:#E66D65; --red-soft:#3A1F1E; --ok:#5DBB84;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#10161C; --surface:#18212A; --ink:#E5EAEE; --muted:#93A0AB; --line:#2B3743;
+  --blue:#6EA2E4; --blue-soft:#1C2C40; --red:#E66D65; --red-soft:#3A1F1E; --ok:#5DBB84;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 17px/1.5 var(--body);-webkit-text-size-adjust:100%}
+#app{max-width:640px;margin:0 auto;padding:0 18px 110px}
+button,input,textarea,select{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+
+.bar{padding:22px 0 14px}
+.back{background:none;border:0;padding:6px 0;color:var(--blue);font-weight:600;font-size:16px}
+h1{font:700 34px/1.05 var(--cond);margin:4px 0 0;letter-spacing:.2px}
+.sub{color:var(--muted);margin:6px 0 0;font-size:15px}
+
+.search input{width:100%;padding:13px 14px;border:1.5px solid var(--line);border-radius:10px;background:var(--surface);font-size:17px}
+.search{margin:4px 0 18px}
+
+.rows{list-style:none;margin:0;padding:0;border-top:1px solid var(--line)}
+.row{display:flex;align-items:center;gap:12px;width:100%;text-align:left;background:none;border:0;border-bottom:1px solid var(--line);padding:15px 2px}
+.row .t{flex:1;min-width:0}
+.row .name{font:600 22px/1.2 var(--cond)}
+.row .meta{color:var(--muted);font-size:14px;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.row .chev{color:var(--muted);font-size:24px;line-height:1}
+.group{font:600 15px/1 var(--body);color:var(--muted);margin:22px 0 8px}
+
+.empty{padding:28px 4px;color:var(--muted)}
+.empty p{margin:0 0 14px}
+
+.note{background:var(--red-soft);border-left:4px solid var(--red);padding:12px 14px;border-radius:0 8px 8px 0;margin:6px 0 18px;white-space:pre-wrap}
+.note b{display:block;color:var(--red);font-weight:600;margin-bottom:2px}
+
+.progress{display:flex;align-items:center;gap:12px;margin:10px 0 4px;color:var(--muted);font-size:15px}
+.track{flex:1;height:6px;background:var(--line);border-radius:3px;overflow:hidden}
+.fill{height:100%;background:var(--blue);transition:width .25s}
+.reset{background:none;border:0;color:var(--blue);font-weight:600;font-size:15px;padding:4px 0}
+
+.steps{list-style:none;margin:8px 0 0;padding:0}
+.step{display:grid;grid-template-columns:46px 1fr;gap:14px;align-items:start;width:100%;text-align:left;background:none;border:0;border-top:1px solid var(--line);padding:16px 0}
+.steps li:last-child .step{border-bottom:1px solid var(--line)}
+.num{width:42px;height:42px;border-radius:50%;border:2.5px solid var(--blue);color:var(--blue);font:700 22px/37px var(--cond);text-align:center;transition:background .15s,border-color .15s}
+.txt{padding-top:8px;white-space:pre-wrap;word-break:break-word}
+.step[aria-pressed="true"] .num{background:var(--ok);border-color:var(--ok);color:#fff}
+.step[aria-pressed="true"] .txt{color:var(--muted);text-decoration:line-through;text-decoration-thickness:1px}
+.stamp{color:var(--muted);font-size:14px;margin:18px 0 0}
+
+.fab{white-space:nowrap;position:fixed;left:50%;transform:translateX(-50%);bottom:calc(18px + env(safe-area-inset-bottom,0px));background:var(--blue);color:#fff;border:0;border-radius:28px;padding:14px 24px;font:600 20px/1 var(--cond);letter-spacing:.3px;box-shadow:0 6px 18px rgba(20,50,90,.28)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .fab{color:#0E1620}}
+:root[data-theme="dark"] .fab{color:#0E1620}
+
+.btn{border:0;border-radius:10px;padding:13px 20px;font-weight:600;font-size:16px}
+.btn.primary{background:var(--blue);color:#fff}
+.btn.ghost{background:var(--blue-soft);color:var(--blue)}
+.btn.danger{background:none;color:var(--red);padding-left:0;padding-right:0}
+.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:22px;align-items:center}
+.actions .spacer{flex:1}
+
+form label{display:block;font-weight:600;font-size:15px;margin:18px 0 6px}
+form .hint{color:var(--muted);font-size:14px;font-weight:400;margin:-2px 0 6px}
+form input,form textarea,form select{width:100%;padding:12px 13px;border:1.5px solid var(--line);border-radius:10px;background:var(--surface);font-size:16px}
+form textarea{resize:vertical;line-height:1.45}
+.err{color:var(--red);font-weight:500;margin:14px 0 0;min-height:1em}
+.lab{display:flex;align-items:flex-end;justify-content:space-between;gap:10px;margin:18px 0 6px}
+.lab label{margin:0}
+.mic{flex:none;display:inline-flex;align-items:center;gap:6px;background:var(--blue-soft);color:var(--blue);border:0;border-radius:18px;padding:7px 13px;font-weight:600;font-size:14px}
+.mic svg{width:16px;height:16px}
+.mic.rec{background:var(--red);color:#fff;animation:pulse 1.2s ease-in-out infinite}
+@keyframes pulse{50%{opacity:.7}}
+.dict{background:var(--surface);border:1.5px solid var(--line);border-radius:12px;padding:4px 14px 14px;margin:4px 0 6px}
+.dict .lab{margin-top:12px}
+.dict .row2{display:flex;gap:10px;align-items:center;margin-top:10px;flex-wrap:wrap}
+.dict .msg{color:var(--muted);font-size:14px;flex:1;min-width:160px}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(24px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);padding:12px 16px;border-radius:12px;font-size:15px;max-width:calc(100% - 32px);z-index:20;box-shadow:0 6px 18px rgba(0,0,0,.25)}
+@media (prefers-reduced-motion:reduce){.mic.rec{animation:none}}
+.hidden{display:none}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+
+#app{padding-top:env(safe-area-inset-top,0px)}
+.mic.busy{opacity:.6;pointer-events:none}
+.mic.busy span::after{content:"…"}
+.login{max-width:420px;margin:0 auto;padding-top:8vh}
+.login form label:first-of-type{margin-top:22px}
+.foot{color:var(--muted);font-size:13px;margin:34px 0 0;display:flex;gap:14px;flex-wrap:wrap;align-items:center}
+.foot button{background:none;border:0;color:var(--blue);font-weight:600;font-size:13px;padding:6px 0}
+#diag{position:fixed;left:8px;right:8px;top:calc(8px + env(safe-area-inset-top,0px));z-index:30;background:var(--red-soft);border:2px solid var(--red);color:var(--ink);border-radius:10px;padding:10px 12px;font-size:13px;white-space:pre-wrap;max-height:40vh;overflow:auto}
+#diag[hidden]{display:none}
+.toast.err{background:var(--red);color:#fff}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+(function(){
+// =============================================================
+//  NASTAVENÍ – stejný Supabase projekt jako appka Servis
+//  Jen Publishable key, NIKDY secret / service_role!
+// =============================================================
+const SUPABASE_URL = "https://pqehuuamgecmdmrdhmza.supabase.co";
+const SUPABASE_KEY = "sb_publishable_6SgwttYu1LHUrAeInwv1Qw_chrfScN7";
+const VERZE = "1";
+// =============================================================
+
+const app=document.getElementById('app');
+const $=s=>app.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const norm=s=>String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase();
+const LS={get(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+const plural=n=>n===1?'postup':(n>=2&&n<=4?'postupy':'postupů');
+const byName=(a,b)=>String(a.name||a.title).localeCompare(String(b.name||b.title),'cs');
+const LADENI=new URLSearchParams(location.search).has('debug');
+const log=(...a)=>{if(LADENI)console.log('[klima]',...a)};
+
+// ---------- diagnostika: chyby JS v červeném rámečku ----------
+function diag(t){let d=document.getElementById('diag');if(!d){d=document.createElement('div');d.id='diag';d.onclick=()=>d.hidden=true;document.body.appendChild(d)}d.hidden=false;d.textContent+=(d.textContent?'\n':'')+t+'  (klepnutím zavřít)'}
+window.addEventListener('error',e=>diag('Chyba: '+(e.message||e)));
+window.addEventListener('unhandledrejection',e=>diag('Chyba: '+(e.reason&&e.reason.message||e.reason)));
+
+if(typeof supabase==='undefined'){diag('Knihovna Supabase se nenačetla (cdn.jsdelivr.net). Zkontrolujte připojení nebo blokování obsahu.');return}
+
+// ---------- přihlášení: vlastní úložiště relace (jako Servis) ----------
+const KLIC_RELACE='klima-prihlaseni';
+const relaceVPameti=new Map();
+const PREFIX='s1:';
+const zakoduj=v=>PREFIX+btoa(String.fromCharCode(...new TextEncoder().encode(v))).split('').reverse().join('');
+function dekoduj(v){if(v==null||!v.startsWith(PREFIX))return v;try{const b=v.slice(PREFIX.length).split('').reverse().join('');return new TextDecoder().decode(Uint8Array.from(atob(b),c=>c.charCodeAt(0)))}catch{return null}}
+const uloziste={
+  getItem(k){if(relaceVPameti.has(k))return relaceVPameti.get(k);try{const v=dekoduj(localStorage.getItem(k));if(v!=null)relaceVPameti.set(k,v);return v}catch{return null}},
+  setItem(k,v){relaceVPameti.set(k,v);setTimeout(()=>{try{localStorage.setItem(k,zakoduj(v))}catch(e){}},0)},
+  removeItem(k){relaceVPameti.delete(k);try{localStorage.removeItem(k)}catch{}}
+};
+const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY.trim(),{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:false,storageKey:KLIC_RELACE,storage:uloziste,debug:LADENI}});
+
+let authZnamo=false,uzivatel=null,brands=[],procs=[],nacteno=false,offline=false;
+const cached=LS.get('kp-cache',null);
+if(cached){brands=cached.brands||[];procs=cached.procs||[];}
+
+// ---------- data ----------
+const zRadkuV=r=>({id:r.id,name:r.nazev});
+const zRadkuP=r=>({id:r.id,brandId:r.vyrobce_id,title:r.nazev,steps:r.kroky||[],note:r.upozorneni||'',updatedAt:Date.parse(r.upraveno)||0});
+let nacitani=null;
+async function nactiData(){
+  if(!uzivatel)return;
+  if(nacitani)return nacitani;
+  nacitani=(async()=>{
+    try{
+      const [v,p]=await Promise.all([
+        sb.from('klima_vyrobci').select('id,nazev'),
+        sb.from('klima_postupy').select('id,vyrobce_id,nazev,kroky,upozorneni,upraveno')
+      ]);
+      if(v.error)throw v.error;if(p.error)throw p.error;
+      brands=v.data.map(zRadkuV);procs=p.data.map(zRadkuP);nacteno=true;offline=false;
+      LS.set('kp-cache',{brands,procs});
+      log('načteno',brands.length,procs.length);
+    }catch(e){
+      offline=true;log('načtení selhalo',e);
+      if(!/fetch|network|load failed/i.test(e.message||''))toast('Načtení selhalo: '+(e.message||e),true);
+    }finally{nacitani=null;render()}
+  })();
+  return nacitani;
+}
+async function proved(fn){
+  const {data,error}=await fn();
+  if(error){
+    const m=/row-level security|permission/i.test(error.message)?'Váš účet nemá oprávnění upravovat postupy.':(error.message||'Uložení se nepodařilo.');
+    toast(m,true);throw error;
+  }
+  return data;
+}
+const store={
+  async addBrand(name){const d=await proved(()=>sb.from('klima_vyrobci').insert({nazev:name}).select('id').single());await nactiData();return d.id},
+  async deleteBrand(id){await proved(()=>sb.from('klima_vyrobci').delete().eq('id',id));await nactiData()},
+  async saveProc(id,b){
+    const radek={vyrobce_id:b.brandId,nazev:b.title,kroky:b.steps,upozorneni:b.note,upraveno:new Date().toISOString(),upravil:uzivatel.id};
+    const d=id?await proved(()=>sb.from('klima_postupy').update(radek).eq('id',id).select('id').single())
+             :await proved(()=>sb.from('klima_postupy').insert(radek).select('id').single());
+    await nactiData();return d.id;
+  },
+  async deleteProc(id){await proved(()=>sb.from('klima_postupy').delete().eq('id',id));await nactiData()}
+};
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')nactiData()});
+window.addEventListener('online',()=>nactiData());
+
+/* ---------- checked steps (per device) ---------- */
+function doneFor(p){const all=LS.get('kp-done',{});const e=all[p.id];return e&&e.u===p.updatedAt?e.d:[]}
+function setDone(p,d){const all=LS.get('kp-done',{});all[p.id]={u:p.updatedAt,d};LS.set('kp-done',all)}
+
+/* ---------- toast ---------- */
+let toastT;
+function toast(t,chyba){let el=document.getElementById('toast');if(!el){el=document.createElement('div');el.id='toast';el.setAttribute('role','status');document.body.appendChild(el)}el.className='toast'+(chyba?' err':'');el.textContent=t;el.hidden=false;clearTimeout(toastT);toastT=setTimeout(()=>el.hidden=true,chyba?6000:3500)}
+
+/* ---------- routing ---------- */
+const go=h=>{location.hash=h};
+window.addEventListener('hashchange',()=>{zastavNahravani(true);render();window.scrollTo(0,0)});
+const brandOf=id=>brands.find(b=>b.id===id);
+const procsOf=id=>procs.filter(p=>p.brandId===id).sort(byName);
+
+function statusText(){
+  if(!nacteno&&!offline)return 'Načítám…';
+  if(offline)return 'Offline, zobrazena poslední uložená verze';
+  return 'Sdíleno s kolegy';
+}
+function fab(label,href){
+  let w=document.getElementById('fabwrap');
+  if(!w){w=document.createElement('div');w.id='fabwrap';document.body.appendChild(w)}
+  w.innerHTML=label&&uzivatel?`<button class="fab" type="button">${esc(label)}</button>`:'';
+  const b=w.querySelector('.fab');if(b)b.onclick=()=>go(href);
+}
+
+function render(){
+  if(!authZnamo){app.dataset.view='';app.innerHTML='<header class="bar"><h1>Klima postupy</h1><p class="sub">Načítám…</p></header>';return}
+  if(!uzivatel)return viewLogin();
+  const r=location.hash.replace(/^#\/?/,'').split('/').filter(Boolean);
+  if(r[0]==='b'&&r[1])return viewBrand(r[1]);
+  if(r[0]==='p'&&r[1])return viewProc(r[1]);
+  if(r[0]==='e'&&r[1])return viewEdit(r[1],r[2]);
+  viewHome();
+}
+
+/* ---------- login ---------- */
+function viewLogin(){
+  if(app.dataset.view==='login')return;
+  app.dataset.view='login';fab();
+  app.innerHTML=`<div class="login"><header class="bar"><h1>Klima postupy</h1><p class="sub">Přihlaste se stejným účtem jako do appky Servis.</p></header>
+  <form id="lf" novalidate>
+    <label for="em">E-mail</label><input id="em" type="email" autocomplete="username" inputmode="email" autocapitalize="off">
+    <label for="pw">Heslo</label><input id="pw" type="password" autocomplete="current-password">
+    <p class="err" id="lerr"></p>
+    <div class="actions"><button class="btn primary" type="submit" id="lb">Přihlásit</button></div>
+  </form><p class="foot">verze ${VERZE}</p></div>`;
+  $('#lf').onsubmit=async e=>{
+    e.preventDefault();const err=$('#lerr'),b=$('#lb');err.textContent='';
+    const email=$('#em').value.trim(),password=$('#pw').value;
+    if(!email||!password){err.textContent='Zadejte e-mail a heslo.';return}
+    b.disabled=true;b.textContent='Přihlašuji…';
+    const {error}=await sb.auth.signInWithPassword({email,password});
+    b.disabled=false;b.textContent='Přihlásit';
+    if(error)err.textContent=/invalid/i.test(error.message)?'Špatný e-mail nebo heslo.':error.message;
+  };
+}
+
+/* ---------- home ---------- */
+function viewHome(){
+  if(app.dataset.view!=='home'){
+    app.dataset.view='home';
+    app.innerHTML=`<header class="bar"><h1>Klima postupy</h1><p class="sub" id="status"></p></header>
+      <div class="search"><input id="q" type="search" placeholder="Hledat výrobce, postup nebo krok" autocomplete="off" aria-label="Hledat"></div>
+      <main id="list"></main>
+      <p class="foot"><span>${esc(uzivatel.email||'')}</span><button type="button" id="lo">Odhlásit</button><span>verze ${VERZE}</span></p>`;
+    $('#q').addEventListener('input',updateHome);
+    $('#lo').onclick=async()=>{if(confirm('Odhlásit se?')){await sb.auth.signOut()}};
+  }
+  updateHome();
+}
+function updateHome(){
+  $('#status').textContent=statusText();
+  fab('+ Přidat postup','#/e/new');
+  const q=norm($('#q').value.trim());
+  const list=$('#list');
+  if(!q){
+    if(!brands.length){
+      list.innerHTML=`<div class="empty"><p>${!nacteno&&!offline?'Načítám postupy…':'Zatím tu nejsou žádné postupy.'}</p></div>`;
+      return;
+    }
+    list.innerHTML='<ul class="rows">'+[...brands].sort(byName).map(b=>{
+      const n=procsOf(b.id).length;
+      return `<li><button class="row" data-b="${esc(b.id)}"><span class="t"><span class="name">${esc(b.name)}</span><span class="meta" style="display:block">${n} ${plural(n)}</span></span><span class="chev">›</span></button></li>`;
+    }).join('')+'</ul>';
+  }else{
+    const bm=brands.filter(b=>norm(b.name).includes(q)).sort(byName);
+    const pm=procs.map(p=>{
+      const b=brandOf(p.brandId);
+      const hitTitle=norm(p.title).includes(q)||norm(b&&b.name).includes(q);
+      const step=(p.steps||[]).find(s=>norm(s).includes(q));
+      const inNote=norm(p.note).includes(q);
+      return (hitTitle||step||inNote)?{p,b,step}:null;
+    }).filter(Boolean).sort((x,y)=>byName(x.p,y.p));
+    let h='';
+    if(bm.length)h+='<p class="group">Výrobci</p><ul class="rows">'+bm.map(b=>`<li><button class="row" data-b="${esc(b.id)}"><span class="t"><span class="name">${esc(b.name)}</span></span><span class="chev">›</span></button></li>`).join('')+'</ul>';
+    if(pm.length)h+='<p class="group">Postupy</p><ul class="rows">'+pm.map(({p,b,step})=>`<li><button class="row" data-p="${esc(p.id)}"><span class="t"><span class="name">${esc(p.title)}</span><span class="meta" style="display:block">${esc(b?b.name:'')}${step?': '+esc(step):''}</span></span><span class="chev">›</span></button></li>`).join('')+'</ul>';
+    list.innerHTML=h||'<div class="empty"><p>Nic nenalezeno. Zkuste jiné slovo, například kód chyby nebo název ovladače.</p></div>';
+  }
+  list.querySelectorAll('[data-b]').forEach(el=>el.onclick=()=>go('#/b/'+el.dataset.b));
+  list.querySelectorAll('[data-p]').forEach(el=>el.onclick=()=>go('#/p/'+el.dataset.p));
+}
+
+/* ---------- brand ---------- */
+function viewBrand(id){
+  app.dataset.view='brand';
+  const b=brandOf(id);
+  if(!b){app.innerHTML=`<header class="bar"><button class="back" id="bk">‹ Výrobci</button><h1>Výrobce nenalezen</h1><p class="sub">${nacteno?'Mohl být smazán.':'Načítám…'}</p></header>`;$('#bk').onclick=()=>go('#/');fab();return}
+  const ps=procsOf(id);
+  app.innerHTML=`<header class="bar"><button class="back" id="bk">‹ Výrobci</button><h1>${esc(b.name)}</h1><p class="sub">${ps.length} ${plural(ps.length)}</p></header>
+    ${ps.length?'<ul class="rows">'+ps.map(p=>`<li><button class="row" data-p="${esc(p.id)}"><span class="t"><span class="name">${esc(p.title)}</span><span class="meta" style="display:block">${(p.steps||[]).length} kroků</span></span><span class="chev">›</span></button></li>`).join('')+'</ul>'
+      :`<div class="empty"><p>U tohoto výrobce zatím nejsou žádné postupy.</p><button class="btn danger" id="delb">Smazat výrobce</button></div>`}`;
+  $('#bk').onclick=()=>go('#/');
+  app.querySelectorAll('[data-p]').forEach(el=>el.onclick=()=>go('#/p/'+el.dataset.p));
+  const d=$('#delb');if(d)d.onclick=async()=>{if(confirm(`Smazat výrobce „${b.name}“?`)){await store.deleteBrand(id);go('#/')}};
+  fab('+ Přidat postup','#/e/new/'+id);
+}
+
+/* ---------- procedure ---------- */
+function viewProc(id){
+  app.dataset.view='proc';
+  const p=procs.find(x=>x.id===id);
+  if(!p){app.innerHTML=`<header class="bar"><button class="back" id="bk">‹ Výrobci</button><h1>Postup nenalezen</h1><p class="sub">${nacteno?'Mohl být smazán.':'Načítám…'}</p></header>`;$('#bk').onclick=()=>go('#/');fab();return}
+  const b=brandOf(p.brandId);const steps=p.steps||[];
+  let done=doneFor(p);
+  app.innerHTML=`<header class="bar"><button class="back" id="bk">‹ ${esc(b?b.name:'Výrobci')}</button><h1>${esc(p.title)}</h1></header>
+    ${p.note?`<div class="note"><b>Upozornění</b>${esc(p.note)}</div>`:''}
+    <div class="progress"><div class="track"><div class="fill" id="fill"></div></div><span id="cnt"></span><button class="reset" id="rst">Začít znovu</button></div>
+    <ol class="steps">${steps.map((s,i)=>`<li><button class="step" data-i="${i}" aria-pressed="false"><span class="num">${i+1}</span><span class="txt">${esc(s)}</span></button></li>`).join('')}</ol>
+    ${p.updatedAt?`<p class="stamp">Naposledy upraveno ${new Date(p.updatedAt).toLocaleDateString('cs-CZ')}</p>`:''}
+    <div class="actions"><button class="btn ghost" id="ed">Upravit postup</button></div>`;
+  const paint=()=>{
+    app.querySelectorAll('.step').forEach(el=>el.setAttribute('aria-pressed',done.includes(+el.dataset.i)?'true':'false'));
+    $('#fill').style.width=(steps.length?done.length/steps.length*100:0)+'%';
+    $('#cnt').textContent=`${done.length} / ${steps.length}`;
+    $('#rst').style.visibility=done.length?'visible':'hidden';
+  };
+  app.querySelectorAll('.step').forEach(el=>el.onclick=()=>{const i=+el.dataset.i;done=done.includes(i)?done.filter(x=>x!==i):[...done,i];setDone(p,done);paint()});
+  $('#rst').onclick=()=>{done=[];setDone(p,done);paint()};
+  $('#bk').onclick=()=>go(b?'#/b/'+b.id:'#/');
+  $('#ed').onclick=()=>go('#/e/'+id);
+  paint();fab();
+}
+
+/* ---------- diktování: nahrávka → funkce servis (přepis Whisperem) ---------- */
+const MIC='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>';
+const lzeNahravat=()=>!!(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia&&window.MediaRecorder);
+const micBtn=f=>lzeNahravat()?`<button type="button" class="mic" data-for="${f}" aria-label="Diktovat">${MIC}<span>Diktovat</span></button>`:'';
+const vhodnyFormat=()=>['audio/webm;codecs=opus','audio/webm','audio/mp4','audio/ogg;codecs=opus'].find(t=>MediaRecorder.isTypeSupported&&MediaRecorder.isTypeSupported(t))||'';
+let nahravani=null;
+async function token(){const s=(await sb.auth.getSession()).data.session;if(!s)throw new Error('Nejste přihlášený.');return s.access_token}
+async function prepniNahravani(btn){
+  if(nahravani&&nahravani.btn===btn){zastavNahravani();return}
+  if(nahravani)zastavNahravani(true);
+  const el=document.getElementById(btn.dataset.for);if(!el)return;
+  let stream;
+  try{stream=await navigator.mediaDevices.getUserMedia({audio:true})}
+  catch(e){toast('Mikrofon není povolený. Povolte ho v Nastavení → Safari → Mikrofon.',true);return}
+  const typ=vhodnyFormat();
+  const rec=new MediaRecorder(stream,typ?{mimeType:typ}:undefined);
+  const st={rec,stream,chunks:[],btn,el,zrusit:false};
+  rec.ondataavailable=e=>{if(e.data.size)st.chunks.push(e.data)};
+  rec.onstop=()=>dokonci(st).catch(e=>toast(e.message||'Přepis se nepovedl',true));
+  rec.start();
+  st.casovac=setTimeout(()=>{if(nahravani===st)zastavNahravani()},120000);
+  nahravani=st;btn.classList.add('rec');btn.querySelector('span').textContent='Stop';
+  log('nahrávám',el.id,rec.mimeType);
+}
+function zastavNahravani(zrusit=false){
+  const st=nahravani;if(!st)return;nahravani=null;clearTimeout(st.casovac);st.zrusit=zrusit;
+  st.btn.classList.remove('rec');st.btn.querySelector('span').textContent='Diktovat';
+  if(!zrusit)st.btn.classList.add('busy');
+  try{st.rec.stop()}catch{}
+}
+async function dokonci(st){
+  st.stream.getTracks().forEach(t=>t.stop());
+  if(st.zrusit)return;
+  try{
+    const blob=new Blob(st.chunks,{type:st.rec.mimeType||'audio/mp4'});
+    if(blob.size<500)throw new Error('Nahrávka je prázdná. Mluvte déle.');
+    const r=await fetch(`${SUPABASE_URL}/functions/v1/servis?akce=prepis&pole=text`,{method:'POST',headers:{Authorization:'Bearer '+await token(),'Content-Type':blob.type||'audio/mp4'},body:blob});
+    const data=await r.json().catch(()=>({}));
+    log('přepis',r.status,data);
+    if(!r.ok)throw new Error(data.chyba||`Přepis selhal (${r.status})`);
+    vloz(st.el,String(data.text||'').trim());
+  }finally{st.btn.classList.remove('busy')}
+}
+function vloz(el,text){
+  if(!text){toast('Nic jsem neslyšel.',true);return}
+  const cur=el.value.replace(/\s+$/,'');
+  if(el.id==='st')el.value=cur?cur+'\n'+text:text;              // kroky: každé diktování nový krok
+  else if(el.tagName==='TEXTAREA')el.value=cur?cur+' '+text:text;
+  else el.value=text.charAt(0).toUpperCase()+text.slice(1);
+  el.dispatchEvent(new Event('input',{bubbles:true}));
+}
+async function rozdel(text){
+  const r=await fetch(`${SUPABASE_URL}/functions/v1/klima?akce=rozdel`,{method:'POST',headers:{Authorization:'Bearer '+await token(),'Content-Type':'application/json'},body:JSON.stringify({text,vyrobci:brands.map(b=>b.name)})});
+  const data=await r.json().catch(()=>({}));
+  log('rozdělení',r.status,data);
+  if(!r.ok)throw new Error(r.status===404?'Funkce „klima“ v Supabase není nasazená.':(data.chyba||`Chyba ${r.status}`));
+  return data;
+}
+
+/* ---------- editor ---------- */
+function viewEdit(id,presetBrand){
+  const key='edit:'+id+':'+(presetBrand||'');
+  if(app.dataset.view===key)return; // keep what the user is typing
+  const p=id==='new'?null:procs.find(x=>x.id===id);
+  if(id!=='new'&&!p){app.dataset.view='';app.innerHTML=`<header class="bar"><h1>Načítám…</h1></header>`;fab();return}
+  app.dataset.view=key;fab();
+  const sel=p?p.brandId:(presetBrand||'');
+  const opts=[...brands].sort(byName).map(b=>`<option value="${esc(b.id)}"${b.id===sel?' selected':''}>${esc(b.name)}</option>`).join('');
+  app.innerHTML=`<header class="bar"><button class="back" id="bk">‹ Zpět</button><h1>${p?'Upravit postup':'Nový postup'}</h1></header>
+  <form id="f" novalidate>
+    <section class="dict" aria-label="Nadiktovat celý postup">
+      <div class="lab"><label for="dk">Nadiktovat celý postup</label>${micBtn('dk')}</div>
+      <textarea id="dk" rows="4" placeholder="Např.: Toshiba, mazání adres. Vypnout napájení, na master jednotce zapnout SW30 bit 2…"></textarea>
+      <div class="row2"><button type="button" class="btn ghost" id="ai">Rozdělit do polí</button><span class="msg" id="aimsg">AI z diktátu vyplní výrobce, název a kroky. Před uložením je zkontrolujte.</span></div>
+    </section>
+    <label for="br">Výrobce</label>
+    <select id="br">${sel?'':'<option value="" selected disabled>Vyberte výrobce</option>'}${opts}<option value="__new">+ Nový výrobce…</option></select>
+    <input id="nb" class="hidden" placeholder="Název výrobce, např. Daikin" style="margin-top:8px" autocomplete="off">
+    <div class="lab"><label for="ti">Název postupu</label>${micBtn('ti')}</div>
+    <input id="ti" placeholder="Např. Vymazání adres jednotek" value="${esc(p?p.title:'')}" autocomplete="off">
+    <div class="lab"><label for="st">Kroky</label>${micBtn('st')}</div>
+    <p class="hint">Každý řádek je jeden krok. Každé diktování přidá nový krok.</p>
+    <textarea id="st" rows="10" placeholder="Podržte tlačítko TEST 4 s&#10;Tlačítky ▲▼ vyberte kód 30&#10;Potvrďte SET">${esc(p?(p.steps||[]).join('\n'):'')}</textarea>
+    <div class="lab"><label for="no">Upozornění <span style="font-weight:400;color:var(--muted)">(nepovinné)</span></label>${micBtn('no')}</div>
+    <textarea id="no" rows="3" placeholder="Např. provádět jen při vypnuté jednotce">${esc(p?p.note||'':'')}</textarea>
+    <p class="err" id="err"></p>
+    <div class="actions"><button class="btn primary" type="submit" id="sv">Uložit postup</button><button class="btn ghost" type="button" id="cn">Zrušit</button><span class="spacer"></span>${p?'<button class="btn danger" type="button" id="dl">Smazat</button>':''}</div>
+  </form>`;
+  const br=$('#br'),nb=$('#nb');
+  const sync=()=>nb.classList.toggle('hidden',br.value!=='__new');
+  if(!brands.length)br.value='__new';
+  br.onchange=()=>{sync();if(br.value==='__new')nb.focus()};sync();
+  app.querySelectorAll('.mic').forEach(b=>{b.addEventListener('pointerdown',e=>e.preventDefault());b.onclick=()=>prepniNahravani(b)});
+  $('#ai').onclick=async()=>{
+    zastavNahravani(true);
+    const ai=$('#ai'),txt=$('#dk').value.trim(),msg=$('#aimsg');
+    if(!txt){msg.textContent='Nejdřív nadiktujte nebo napište postup.';$('#dk').focus();return}
+    ai.disabled=true;ai.textContent='Zpracovávám…';msg.textContent='AI rozděluje diktát do polí…';
+    try{
+      const r=await rozdel(txt)||{};
+      const v=String(r.vyrobce||'').trim();
+      if(v){const ex=brands.find(b=>norm(b.name)===norm(v));if(ex)br.value=ex.id;else{br.value='__new';nb.value=v}sync()}
+      if(r.nazev)$('#ti').value=String(r.nazev).trim();
+      const k=Array.isArray(r.kroky)?r.kroky.map(x=>String(x).trim()).filter(Boolean):[];
+      if(k.length)$('#st').value=k.join('\n');
+      if(r.upozorneni)$('#no').value=String(r.upozorneni).trim();
+      msg.textContent=k.length?'Hotovo. Zkontrolujte pole níže a uložte.':'Kroky se z diktátu nepodařilo poznat. Doplňte je ručně.';
+      if(k.length)$('#ti').scrollIntoView({behavior:'smooth',block:'center'});
+    }catch(e){msg.textContent='Rozdělení se nepovedlo: '+(e.message||e)}
+    finally{ai.disabled=false;ai.textContent='Rozdělit do polí'}
+  };
+  const back=()=>go(p?'#/p/'+id:(presetBrand?'#/b/'+presetBrand:'#/'));
+  $('#bk').onclick=back;$('#cn').onclick=back;
+  if(p)$('#dl').onclick=async()=>{if(confirm(`Smazat postup „${p.title}“?`)){await store.deleteProc(id);app.dataset.view='';go('#/b/'+p.brandId)}};
+  $('#f').onsubmit=async e=>{
+    e.preventDefault();zastavNahravani(true);
+    const err=$('#err');err.textContent='';
+    const title=$('#ti').value.trim();
+    const steps=$('#st').value.split(/\r?\n/).map(s=>s.trim().replace(/^(\d+\s*[.)]|[-–•*])\s*/,'').trim()).filter(Boolean);
+    const note=$('#no').value.trim();
+    let brandId=br.value;
+    if(brandId==='__new'&&!nb.value.trim()){err.textContent='Zadejte název výrobce.';nb.focus();return}
+    if(!brandId){err.textContent='Vyberte výrobce.';return}
+    if(!title){err.textContent='Zadejte název postupu.';$('#ti').focus();return}
+    if(!steps.length){err.textContent='Přidejte alespoň jeden krok.';$('#st').focus();return}
+    const sv=$('#sv');sv.disabled=true;sv.textContent='Ukládám…';
+    try{
+      if(brandId==='__new'){
+        const name=nb.value.trim();
+        const ex=brands.find(b=>norm(b.name)===norm(name));
+        brandId=ex?ex.id:await store.addBrand(name);
+      }
+      const newId=await store.saveProc(p?id:null,{brandId,title,steps,note});
+      app.dataset.view='';go('#/p/'+newId);
+    }catch(x){sv.disabled=false;sv.textContent='Uložit postup'}
+  };
+}
+
+/* ---------- start ---------- */
+sb.auth.onAuthStateChange((udalost,session)=>{
+  const u=session?session.user:null;
+  log('auth',udalost,u&&u.email);
+  const zmena=(u&&u.id)!==(uzivatel&&uzivatel.id);
+  uzivatel=u;authZnamo=true;
+  if(!u){app.dataset.view='';brands=[];procs=[];nacteno=false;try{localStorage.removeItem('kp-cache')}catch{}render();return}
+  if(zmena){app.dataset.view='';render();setTimeout(nactiData,0)}
+});
+render();
+if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(e=>log('sw',e));
+})();
+</script>
+</body>
+</html>
