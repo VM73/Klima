@@ -34,8 +34,11 @@ Mobilní PWA s postupy nastavení klimatizací podle výrobce (mazání adres, p
 ## Stav
 - Verze 1.
 
+## Supabase
+- Schéma (tabulky, RLS) a kód Edge Functions `klima` i `servis` jsou zálohované v repu **VM73/Servis** ve složce `supabase/` (sdílený projekt má jednu zálohu).
+
 ## Otevřené otázky
-- SQL tabulek a kód Edge Function `klima` nejsou v repu – doplnit složku `supabase/`.
+- Edge Function `klima` ověřuje jen přihlášení (ne `aktivni` ani `'klima' = any(aplikace)`) – zvážit doplnění kontroly.
 - README je prázdné.
 
 ## Neměnit
