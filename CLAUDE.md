@@ -22,6 +22,7 @@ Mobilní PWA s postupy nastavení klimatizací podle výrobce (mazání adres, p
 - Výrobce → postupy. Postup: název, kroky/text, výrobce.
 
 ## Pravidla
+- **Dopad na náklady a limity:** u každé úpravy předem zvážit a v souhrnu oznámit dopad na Claude (tokeny), GitHub (Actions minuty, Pages), Supabase (DB, Storage, Edge Functions – free tier), OpenAI/Anthropic API (cena za volání). Když se nic nemění, napsat „bez dopadu“.
 - Nejjednodušší řešení, měnit jen nutné; cílené záměny v `index.html`.
 - UI česky, iOS vzhled, od 320 px, iPhone i Android.
 - Diagnostika: `?debug=1`, viditelné číslo verze.
